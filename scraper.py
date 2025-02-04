@@ -2,20 +2,19 @@ import requests
 from bs4 import BeautifulSoup
 
 def scrape_glints():
-    url = "https://glints.com/id/opportunities/jobs/explore"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, 'html.parser')
+    url = "https://glints.com/id/lowongan-kerja"  # URL halaman Glints
+    response = requests.get(url)
     
+    if response.status_code != 200:
+        return ["⚠️ Tidak bisa mengambil data dari Glints."]
+    
+    soup = BeautifulSoup(response.text, "html.parser")
     jobs = []
-    # Sesuaikan selector sesuai struktur website Glints (bisa berubah!)
-    for item in soup.select('div[data-test="job-card"]'):
-        title = item.select_one('h3.job-title').text.strip()
-        company = item.select_one('div.company-name').text.strip()
-        location = item.select_one('div.location').text.strip()
-        link = item.find('a')['href']
-        jobs.append(f"🔹 {title}\n🏢 {company}\n📍 {location}\n🔗 https://glints.com{link}\n")
     
-    return jobs[:5]  # Ambil 5 lowongan pertama
+    # Contoh mengambil data job list
+    for job in soup.find_all("div", class_="JobCard_classname__placeholder-class", limit=10):  # Sesuaikan class
+        title = job.find("h3").text.strip() if job.find("h3") else "No Title"
+        link = job.find("a", href=True)["href"] if job.find("a", href=True) else "#"
+        jobs.append(f"{title}\n🔗 {link}")
+    
+    return jobs if jobs else ["Tidak ada lowongan terbaru."]
